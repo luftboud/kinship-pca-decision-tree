@@ -11,4 +11,4 @@ def compute_pca_embeddings(face: np.ndarray, max_features_amount: int = 10) -> n
     wk = eigenvectors[:, :max_features_amount]
     embeddings = wk.T @ face.T
 
-    return embeddings
+    return embeddings.T
