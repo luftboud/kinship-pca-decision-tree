@@ -1,5 +1,6 @@
 import os
 import cv2
+import numpy as np
 
 def grayscale(img):
     return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -13,18 +14,23 @@ def normalize(face):
 
 def preprocess(directory, target_size=(100, 100)):
     matrices = []
+
     for filename in os.listdir(directory):
         path = os.path.join(directory, filename)
         img = cv2.imread(path)
+
         if img is None:
             raise ValueError(f"Cannot read image: {path}")
+
         gray = grayscale(img)
+
         faces = face_cascade.detectMultiScale(
             gray,
             scaleFactor=1.1,
             minNeighbors=5,
             minSize=(50, 50)
         )
+
         if len(faces) == 0:
            continue
 
@@ -34,5 +40,9 @@ def preprocess(directory, target_size=(100, 100)):
         face = cv2.resize(face, target_size)
 
         face = normalize(face)
-        matrices.append(face)
-    return matrices
+
+        flat = face.flatten()
+
+        matrices.append(flat)
+
+    return np.array(matrices)
