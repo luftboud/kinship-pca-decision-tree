@@ -15,12 +15,15 @@ def normalize(face):
 
 
 def mean_centering(face: np.ndarray) -> np.ndarray:
-    n_faces, _ = face.shape
-    for i in range(n_faces):
-        curr_mean = np.mean(face[i])
-        face[i] -= curr_mean
+    if face.ndim == 1:
+        return face - np.mean(face)
 
-    return face
+    if face.ndim == 2:
+        centered = face.copy()
+        n_faces, _ = centered.shape
+        for i in range(n_faces):
+            centered[i] -= np.mean(centered[i])
+        return centered
 
 def preprocess(directory, target_size=(100, 100)):
     matrices = []
