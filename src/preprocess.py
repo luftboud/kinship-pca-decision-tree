@@ -2,6 +2,7 @@ import os
 import cv2
 import numpy as np
 
+
 def grayscale(img):
     return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -11,6 +12,15 @@ face_cascade = cv2.CascadeClassifier(
 
 def normalize(face):
     return face.astype("float") / 255.0
+
+
+def mean_centering(face: np.ndarray) -> np.ndarray:
+    n_faces, _ = face.shape
+    for i in range(n_faces):
+        curr_mean = np.mean(face[i])
+        face[i] -= curr_mean
+
+    return face
 
 def preprocess(directory, target_size=(100, 100)):
     matrices = []
@@ -43,6 +53,7 @@ def preprocess(directory, target_size=(100, 100)):
 
         flat = face.flatten()
 
-        matrices.append(flat)
+        centered = mean_centering(flat)
+        matrices.append(centered)
 
     return np.array(matrices)
