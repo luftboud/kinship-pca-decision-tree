@@ -9,7 +9,7 @@ from preprocess import preprocess
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-FACES_ROOT = PROJECT_ROOT / "data/test-public-faces/test-public-faces"
+FACES_ROOT = PROJECT_ROOT / "data/test-public-faces"
 TRAIN_RELATIONSHIPS = PROJECT_ROOT / "data/train_relationships.csv"
 
 
@@ -83,12 +83,14 @@ def main():
     pairs = pos_idx_pairs + neg_idx_pairs
     labels = [1] * len(pos_idx_pairs) + [0] * len(neg_idx_pairs)
 
-    _, accuracy = train_decision_tree_from_pairs(embeddings, pairs, labels)
+    _, accuracy, report, matrix = train_decision_tree_from_pairs(embeddings, pairs, labels)
 
     print(f"Usable preprocessed identities: {len(person_dirs)}")
     print(f"Positive pairs: {len(pos_idx_pairs)}")
     print(f"Negative pairs: {len(neg_idx_pairs)}")
     print(f"Decision Tree accuracy: {accuracy:.4f}")
+    print(f"Decision Tree report:\n{report}")
+    print(f"Decision Tree confusion matrix:\n{matrix}")
 
 if __name__ == "__main__":
     main()
