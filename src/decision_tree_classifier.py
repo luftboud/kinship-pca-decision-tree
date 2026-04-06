@@ -20,9 +20,7 @@ def train_decision_tree_from_pairs(
     )
 
     tree.fit(x_train, y_train)
-    model = tree.tree_
-
-    return model
+    return tree
 
 
 def test_decision_tree_classifier(model, embeddings, test_pairs, test_labels):
@@ -32,7 +30,7 @@ def test_decision_tree_classifier(model, embeddings, test_pairs, test_labels):
     if len(x_test) != len(y_test):
         raise ValueError(f"Test pairs and labels count mismatch: {len(x_test)} vs {len(y_test)}")
 
-    y_pred = np.argmax(model.predict(x_test), axis=1)
+    y_pred = model.predict(x_test)
 
     accuracy = accuracy_score(y_test, y_pred)
     report = classification_report(y_test, y_pred)

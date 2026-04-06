@@ -1,10 +1,7 @@
 import numpy as np
 
 
-def compute_pca_embeddings(faces: np.ndarray, max_features_amount: int = 10) -> tuple[np.ndarray, np.ndarray]:
-    centering = np.mean(faces, axis=0).astype(np.float32)
-    faces = faces - centering
-
+def compute_pca_embeddings(faces: np.ndarray, max_features_amount: int = 10) -> np.ndarray:
     a_transp_a = faces.T @ faces
     eigenvalues, eigenvectors = np.linalg.eigh(a_transp_a)
 
@@ -13,4 +10,4 @@ def compute_pca_embeddings(faces: np.ndarray, max_features_amount: int = 10) -> 
 
     wk = eigenvectors[:, :max_features_amount]
 
-    return wk, centering
+    return wk

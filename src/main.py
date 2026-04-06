@@ -19,12 +19,13 @@ TEST_FACES_LABELS = PROJECT_ROOT / "data" / "test-private-labels"
 
 SEED = 42
 FEATURES_AMOUNT = 20
+IMG_SIZE = (64, 64)
 
 
-def create_test_relations(centering):
+def create_test_relations():
     imgs = {}
-    positive_pairs = []
-    negative_pairs = []
+    positive_pairs = set()
+    negative_pairs = set()
 
     for root, dirs, files in os.walk(SPLIT_TEST_RELATIONS):
         for file in files:
@@ -36,23 +37,23 @@ def create_test_relations(centering):
                     f1, f2 = TEST_FACES_ROOT / f1.strip(), TEST_FACES_ROOT / f2.strip()
 
                     if f1 not in imgs:
-                        imgs[f1] = preprocess_file(f1, target_size=(64, 64), centering=centering)
+                        imgs[f1] = preprocess_file(f1, target_size=IMG_SIZE)
                     if f2 not in imgs:
-                        imgs[f2] = preprocess_file(f2, target_size=(64, 64), centering=centering)
+                        imgs[f2] = preprocess_file(f2, target_size=IMG_SIZE)
 
                     if imgs[f1] is None or imgs[f2] is None:
                         continue
 
                     if int(lbl.strip()) == 1:
-                        positive_pairs.append((f1, f2))
+                        positive_pairs.add((f1, f2))
                         continue
 
-                    negative_pairs.append((f1, f2))
+                    negative_pairs.add((f1, f2))
 
     return imgs, positive_pairs, negative_pairs
 
 
-def preprocess_img(person_dir, target_size=(64, 64)):
+def preprocess_img(person_dir, target_size=IMG_SIZE):
     if not person_dir.exists() or not person_dir.is_dir():
         return None
 
@@ -117,7 +118,10 @@ def get_prepared_train_data(relationships_file, faces_img_root):
     person_dirs = sorted(vectors.keys())
     image_matrix = np.array([vectors[p] for p in person_dirs], dtype=np.float32)
 
-    wk, centering = compute_pca_embeddings(image_matrix, max_features_amount=FEATURES_AMOUNT)
+    centering = np.mean(image_matrix, axis=0)
+    image_matrix = image_matrix - centering
+
+    wk = compute_pca_embeddings(image_matrix, max_features_amount=FEATURES_AMOUNT)
     embeddings = image_matrix @ wk
 
     image_to_idx = {p: i for i, p in enumerate(person_dirs)}
@@ -132,12 +136,13 @@ def get_prepared_train_data(relationships_file, faces_img_root):
 
 
 def get_prepared_test_data(wk, centering):
-    imgs, positive_pairs, negative_pairs = create_test_relations(centering)
+    imgs, positive_pairs, negative_pairs = create_test_relations()
 
     person_dirs = sorted(imgs.keys())
     image_matrix = np.array([imgs[p] for p in person_dirs], dtype=np.float32)
-
+    image_matrix = image_matrix - centering
     test_embeddings = image_matrix @ wk
+
     image_to_idx = {p: i for i, p in enumerate(person_dirs)}
     pos_idx_pairs = [(image_to_idx[a], image_to_idx[b]) for a, b in positive_pairs]
     neg_idx_pairs = [(image_to_idx[a], image_to_idx[b]) for a, b in negative_pairs]

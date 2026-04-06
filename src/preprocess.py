@@ -11,7 +11,7 @@ def normalize(face):
     return face.astype("float") / 255.0
 
 
-def preprocess_file(path, target_size=(100, 100), centering=None):
+def preprocess_file(path, target_size=(100, 100)):
     img = cv2.imread(path)
 
     if img is None:
@@ -22,10 +22,6 @@ def preprocess_file(path, target_size=(100, 100), centering=None):
     face = cv2.resize(gray, target_size)
     face = normalize(face)
     flat = face.flatten()
-
-    if centering is not None:
-        flat = flat - centering
-
     return flat
 
 
