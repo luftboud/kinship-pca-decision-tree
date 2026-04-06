@@ -1,67 +1,41 @@
 import numpy as np
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 
 from similarity import build_pair_feature_matrix
 
 
-def check_leakage(pairs_train, pairs_test):
-    train_indices = set(i for pair in pairs_train for i in pair)
-    test_indices = set(i for pair in pairs_test for i in pair)
-
-    intersection = train_indices.intersection(test_indices)
-    if len(intersection) > 0:
-        print(f"[WARNING] Possible leakage: {len(intersection)} shared identities between train and test")
-
-
 def train_decision_tree_from_pairs(
-    embeddings, pairs, labels, test_size=0.2, random_state=42
+    embeddings, train_pairs, train_labels, random_state=42
 ):
-    x = build_pair_feature_matrix(embeddings, pairs)
-    y = np.asarray(labels, dtype=int)
+    x_train = build_pair_feature_matrix(embeddings, train_pairs)
+    y_train = np.asarray(train_labels, dtype=int)
 
-    if len(x) != len(y):
-        raise ValueError(f"Pairs and labels count mismatch: {len(x)} vs {len(y)}")
+    if len(x_train) != len(y_train):
+        raise ValueError(f"Train pairs and labels count mismatch: {len(x_train)} vs {len(y_train)}")
 
-    indices = np.arange(len(pairs))
-    idx_train, idx_test = train_test_split(
-        indices, test_size=test_size, random_state=random_state, stratify=y
+    tree = DecisionTreeClassifier(
+        random_state=random_state,
+        class_weight="balanced"
     )
 
-    x_train, x_test = x[idx_train], x[idx_test]
-    y_train, y_test = y[idx_train], y[idx_test]
+    tree.fit(x_train, y_train)
+    model = tree.tree_
 
-    pairs_train = [pairs[i] for i in idx_train]
-    pairs_test = [pairs[i] for i in idx_test]
+    return model
 
-    check_leakage(pairs_train, pairs_test)
 
-    param_grid = {
-        "max_depth": [2, 3, 4, 5, 6, 8, 10, None],
-        "min_samples_leaf": [1, 2, 4, 8, 16],
-        "min_samples_split": [2, 4, 8, 16],
-        "criterion": ["gini", "entropy", "log_loss"],
-    }
+def test_decision_tree_classifier(model, embeddings, test_pairs, test_labels):
+    x_test = build_pair_feature_matrix(embeddings, test_pairs)
+    y_test = np.array(test_labels, dtype=int)
 
-    search = GridSearchCV(
-        DecisionTreeClassifier(
-            random_state=random_state,
-            class_weight="balanced"
-        ),
-        param_grid=param_grid,
-        cv=5,
-        n_jobs=-1,
-        scoring="accuracy",
-    )
+    if len(x_test) != len(y_test):
+        raise ValueError(f"Test pairs and labels count mismatch: {len(x_test)} vs {len(y_test)}")
 
-    search.fit(x_train, y_train)
-    model = search.best_estimator_
-
-    y_pred = model.predict(x_test)
+    y_pred = np.argmax(model.predict(x_test), axis=1)
 
     accuracy = accuracy_score(y_test, y_pred)
     report = classification_report(y_test, y_pred)
     matrix = confusion_matrix(y_test, y_pred)
 
-    return model, accuracy, report, matrix
+    return accuracy, report, matrix

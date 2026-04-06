@@ -14,10 +14,13 @@ def compute_similarity_features(z1, z2):
     max_diff = np.max(difference)
     std_diff = np.std(difference)
 
-    outp = np.array([euclidian_distance, manhattan_distance, cos_similarity, mean, max_diff, std_diff])
+    dot_product = z1 @ z2
+    squared_euclidean = np.sum((z1 - z2) ** 2)
+
+    outp = np.array([euclidian_distance, manhattan_distance, cos_similarity, mean, max_diff, std_diff, dot_product, squared_euclidean])
     return outp
 
 
 def build_pair_feature_matrix(embeddings, pairs):
     features = [compute_similarity_features(embeddings[i], embeddings[j]) for i, j in pairs]
-    return np.array(features, dtype=float)
+    return np.array(features, dtype=np.float32)
