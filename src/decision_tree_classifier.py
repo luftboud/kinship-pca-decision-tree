@@ -15,13 +15,10 @@ def train_decision_tree_from_pairs(
     if len(x_train) != len(y_train):
         raise ValueError(f"Train pairs and labels count mismatch: {len(x_train)} vs {len(y_train)}")
 
-    tree = RandomForestClassifier(
-        n_estimators=300,
+    tree = DecisionTreeClassifier(
         max_depth=12,
-        min_samples_split=10,
-        min_samples_leaf=5,
         class_weight="balanced",
-        n_jobs=-1
+        random_state=random_state
     )
 
     tree.fit(x_train, y_train)
