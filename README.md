@@ -38,12 +38,17 @@ The dataset provides predefined relationships such as brother-brother, father-so
 .
 ├── data/                            # dataset files / metadata
 ├── src/                             # source code
-│   ├── preprocess.py                # image preprocessing
-│   ├── pca.py                       # PCA computation
-│   ├── similarity.py                # pair feature construction
-│   ├── decision_tree_classifier.py  # classifier training
-│   └── main.py                      # main pipeline
+│   ├── constants.py                 # project constants and configs
+│   ├── preprocess.py                # image preprocessing (resize, normalize, flatten)
+│   ├── pca.py                       # PCA computation and embeddings
+│   ├── similarity.py                # similarity feature computation
+│   ├── train_preparation.py         # train data preparation
+│   ├── test_preparation.py          # test data preparation
+│   ├── decision_tree_classifier.py  # model training and evaluation
+│   └── main.py                      # pipeline entry point
+├── .gitignore
 ├── requirements.txt                 # dependencies
+├── report.pdf
 └── README.md
 ```
 ## Installation
@@ -68,15 +73,17 @@ If needed, update dataset paths in the source code or configuration files before
 
 ## Evaluation
 
-The model is evaluated as a binary classifier that predicts whether two face images belong to relatives or non-relatives.
+The model is evaluated as a binary classification system that predicts whether a pair of face images represents relatives (kin) or non-relatives.
 
-Metrics received:
+The following evaluation metrics are used:
 
-- Accuracy
-- Precision
-- Recall
-- F1-score
-- Confusion matrix
+- **Accuracy** — overall proportion of correctly classified pairs
+- **Precision** — how many predicted kin pairs are actually correct
+- **Recall** — how many true kin pairs are correctly identified
+- **F1-score** — harmonic mean of precision and recall
+- **Confusion matrix** — detailed breakdown of correct and incorrect predictions for both classes
+
+These metrics provide both a general performance estimate and a more detailed understanding of model behavior across classes.
 
 ## Authors
 This project was developed as part of a university linear algebra course project.
