@@ -88,7 +88,7 @@ Conducted by:
 ## Project Presentation Videos
 
 - [Project explanation by Iia](https://youtu.be/AIsf5mwg7ws?si=JDw6CCrSNRswZm14)
-- [Project explanation by Vladyslav](https://youtu.be/Gq7dwD0i39g?si=cdAExuVHlWNkjk5a
+- [Project explanation by Vladyslav](https://youtu.be/Gq7dwD0i39g?si=cdAExuVHlWNkjk5a)
 - [Project explanation by Arsen](https://youtu.be/uSCKeW5xQq4?si=gF-Cupe1jQIJxBB1)
 
 
