@@ -17,8 +17,12 @@ def compute_similarity_features(z1, z2):
     dot_product = z1 @ z2
     squared_euclidean = np.sum((z1 - z2) ** 2)
 
-    outp = np.array([euclidian_distance, manhattan_distance, cos_similarity, mean, max_diff, std_diff, dot_product, squared_euclidean])
-    return outp
+    return np.concatenate([
+        np.abs(z1 - z2),
+        z1 * z2,
+        [euclidian_distance, manhattan_distance, cos_similarity, mean,
+            max_diff, std_diff, dot_product, squared_euclidean]
+    ])
 
 
 def build_pair_feature_matrix(embeddings, pairs):

@@ -1,7 +1,6 @@
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-from sklearn.tree import DecisionTreeClassifier
 
 from similarity import build_pair_feature_matrix
 
@@ -15,10 +14,12 @@ def train_decision_tree_from_pairs(
     if len(x_train) != len(y_train):
         raise ValueError(f"Train pairs and labels count mismatch: {len(x_train)} vs {len(y_train)}")
 
-    tree = DecisionTreeClassifier(
-        max_depth=12,
-        class_weight="balanced",
-        random_state=random_state
+    perm = np.random.permutation(len(y_train))
+    x_train = x_train[perm]
+    y_train = y_train[perm]
+
+    tree = LogisticRegression(
+        random_state=42,
     )
 
     tree.fit(x_train, y_train)
