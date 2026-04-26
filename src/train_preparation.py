@@ -5,6 +5,10 @@ from pca import compute_pca_embeddings
 from preprocess import preprocess_dir
 from constants import *
 
+def l2_normalize_rows(matrix):
+    norms = np.sqrt(np.sum(matrix ** 2, axis=1, keepdims=True))
+    norms[norms == 0] = 1.0
+    return matrix / norms
 
 def preprocess_img_dir(person_dir, target_size=IMG_SIZE):
     if not person_dir.exists() or not person_dir.is_dir():
@@ -115,6 +119,7 @@ def get_prepared_train_data(relationships_file, faces_img_root):
 
     wk = compute_pca_embeddings(image_matrix, max_features_amount=FEATURES_AMOUNT)
     embeddings = image_matrix @ wk
+    embeddings = l2_normalize_rows(embeddings)
 
     pos_idx_pairs = build_positive_photo_pairs(
         positive_person_pairs,

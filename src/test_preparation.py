@@ -5,6 +5,11 @@ from preprocess import preprocess_file
 from constants import *
 
 
+def l2_normalize_rows(matrix):
+    norms = np.sqrt(np.sum(matrix ** 2, axis=1, keepdims=True))
+    norms[norms == 0] = 1.0
+    return matrix / norms
+
 def create_test_relations():
     imgs = {}
     positive_pairs = set()
@@ -43,6 +48,7 @@ def get_prepared_test_data(wk, centering):
     image_matrix = np.array([imgs[p] for p in person_dirs], dtype=np.float32)
     image_matrix = image_matrix - centering
     test_embeddings = image_matrix @ wk
+    test_embeddings = l2_normalize_rows(test_embeddings)
 
     image_to_idx = {p: i for i, p in enumerate(person_dirs)}
     pos_idx_pairs = [(image_to_idx[a], image_to_idx[b]) for a, b in positive_pairs]
