@@ -1,7 +1,7 @@
 from pathlib import Path
 
 SEED = 42
-FEATURES_AMOUNT = 128  # keep all dlib dimensions
+FEATURES_AMOUNT = 128
 IMG_SIZE = (64, 64)
 MODEL_TYPE = "random_forest"
 
