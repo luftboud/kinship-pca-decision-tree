@@ -14,7 +14,7 @@ def l2_normalize_rows(matrix):
 
 
 def _batch_embed_paths(paths):
-    """Compute dlib embeddings for a list of paths using cache + 6 threads."""
+    """Compute dlib embeddings for a list of paths using cache + configured threads."""
     cache = _get_cache()
     to_compute = [p for p in paths if p not in cache]
 
@@ -33,7 +33,7 @@ def _batch_embed_paths(paths):
                     print(f"\rprogress: {pct}%", end="", flush=True)
             return p, emb
 
-        with ThreadPoolExecutor(max_workers=12) as ex:
+        with ThreadPoolExecutor(max_workers=EMBEDDING_THREADS) as ex:
             for path, emb in ex.map(compute_and_track, to_compute):
                 cache[path] = emb
 
