@@ -117,7 +117,7 @@ def jacobi_eigh(matrix, eps=1e-10, max_iter=1000):
 
 def compute_pca_embeddings(faces: np.ndarray, max_features_amount: int = 10) -> np.ndarray:
     a_transp_a = faces.T @ faces
-    eigenvalues, eigenvectors = jacobi_eigh(a_transp_a)
+    eigenvalues, eigenvectors = np.linalg.eigh(a_transp_a)
 
     idx = np.argsort(eigenvalues)[::-1]
     eigenvectors = eigenvectors[:, idx]

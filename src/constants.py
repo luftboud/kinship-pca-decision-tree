@@ -1,8 +1,8 @@
 from pathlib import Path
 
 SEED = 42
-FEATURES_AMOUNT = 70
-IMG_SIZE = (86, 86)
+FEATURES_AMOUNT = 64
+IMG_SIZE = (64, 64)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TRAIN_FACES_ROOT = PROJECT_ROOT / "data" / "test-public-faces"
