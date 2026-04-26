@@ -116,12 +116,28 @@ def jacobi_eigh(matrix, eps=1e-10, max_iter=1000):
     return eigenvalues, eigenvectors
 
 def compute_pca_embeddings(faces: np.ndarray, max_features_amount: int = 10) -> np.ndarray:
-    a_transp_a = faces.T @ faces
-    eigenvalues, eigenvectors = jacobi_eigh(a_transp_a)
+    n, d = faces.shape
+    print(f"PCA: {n} images, {d} features, keeping top {max_features_amount} components")
 
-    idx = np.argsort(eigenvalues)[::-1]
+    if n < d:
+        print(f"PCA: Gram matrix {n}x{n}...")
+        M = faces @ faces.T
+    else:
+        print(f"PCA: covariance matrix {d}x{d}...")
+        M = faces.T @ faces
+
+    eigenvalues, eigenvectors = np.linalg.eigh(M)
+    idx = eigenvalues.argsort()[::-1]
     eigenvectors = eigenvectors[:, idx]
 
-    wk = eigenvectors[:, :max_features_amount]
+    if n < d:
+        k = min(max_features_amount, n)
+        wk = faces.T @ eigenvectors[:, :k]
+        col_norms = np.sqrt((wk * wk).sum(axis=0, keepdims=True))
+        col_norms[col_norms < 1e-12] = 1.0
+        wk = wk / col_norms
+    else:
+        wk = eigenvectors[:, :max_features_amount]
 
-    return wk
+    print(f"PCA: done, projection matrix shape {wk.shape}")
+    return wk.astype(np.float32)

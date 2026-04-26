@@ -2,24 +2,13 @@ import csv
 import numpy as np
 
 from pca import compute_pca_embeddings
-from preprocess import preprocess_dir
+from preprocess import preprocess_all_dirs
 from constants import *
 
 def l2_normalize_rows(matrix):
     norms = np.sqrt(np.sum(matrix ** 2, axis=1, keepdims=True))
     norms[norms == 0] = 1.0
     return matrix / norms
-
-def preprocess_img_dir(person_dir, target_size=IMG_SIZE):
-    if not person_dir.exists() or not person_dir.is_dir():
-        return []
-
-    vectors = preprocess_dir(str(person_dir), target_size=target_size)
-    if len(vectors) == 0:
-        return []
-
-    return vectors
-
 
 def load_relationship_pairs(relationships_file, faces_root):
     positive_pairs = []
@@ -121,21 +110,29 @@ def get_prepared_train_data(relationships_file, faces_img_root):
     rng = np.random.default_rng(SEED)
 
     positive_person_pairs, candidate_person_dirs = load_relationship_pairs(relationships_file, faces_img_root)
+    print(f"Train: {len(positive_person_pairs)} positive pairs, {len(candidate_person_dirs)} persons")
+
+    print(f"Train: computing embeddings...")
+    dir_embeddings = preprocess_all_dirs(candidate_person_dirs)
 
     person_to_photo_indices = {}
     all_images = []
+    family_labels = []
 
     for person_dir in candidate_person_dirs:
-        photo_vectors = preprocess_img_dir(person_dir)
-
-        if len(photo_vectors) == 0:
+        photo_vectors = dir_embeddings.get(str(person_dir))
+        if photo_vectors is None or len(photo_vectors) == 0:
             continue
+
+        rel = person_dir.relative_to(faces_img_root)
+        family_id = rel.parts[0]
 
         indices = []
         for vec in photo_vectors:
             idx = len(all_images)
             all_images.append(vec)
             indices.append(idx)
+            family_labels.append(family_id)
 
         person_to_photo_indices[person_dir] = indices
 
@@ -145,6 +142,7 @@ def get_prepared_train_data(relationships_file, faces_img_root):
     if len(all_images) == 0:
         raise ValueError("No training images were loaded.")
 
+    print(f"Train: {len(all_images)} images loaded, computing PCA...")
     image_matrix = np.asarray(all_images, dtype=np.float32)
 
     centering = np.mean(image_matrix, axis=0, keepdims=True)
@@ -154,11 +152,12 @@ def get_prepared_train_data(relationships_file, faces_img_root):
     embeddings = image_matrix @ wk
     embeddings = l2_normalize_rows(embeddings)
 
+    print(f"Train: building pairs...")
     pos_idx_pairs = build_positive_photo_pairs(
         positive_person_pairs,
         person_to_photo_indices,
         rng,
-        max_pairs_per_relation=10
+        max_pairs_per_relation=40
     )
 
     neg_idx_pairs = build_negative_photo_pairs(
@@ -166,10 +165,12 @@ def get_prepared_train_data(relationships_file, faces_img_root):
         amount=len(pos_idx_pairs),
         rng=rng,
         faces_root=faces_img_root,
-        embeddings=embeddings
+        embeddings=embeddings,
+        hard_fraction=0.15
     )
 
     pairs = pos_idx_pairs + neg_idx_pairs
     labels = [1] * len(pos_idx_pairs) + [0] * len(neg_idx_pairs)
 
-    return pairs, labels, embeddings, wk, centering
+    print(f"Train: {len(pos_idx_pairs)} positive, {len(neg_idx_pairs)} negative pairs")
+    return pairs, labels, embeddings, family_labels, wk, centering

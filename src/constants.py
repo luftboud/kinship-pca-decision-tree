@@ -1,8 +1,9 @@
 from pathlib import Path
 
 SEED = 42
-FEATURES_AMOUNT = 64
+FEATURES_AMOUNT = 128  # keep all dlib dimensions
 IMG_SIZE = (64, 64)
+MODEL_TYPE = "random_forest"
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TRAIN_FACES_ROOT = PROJECT_ROOT / "data" / "test-public-faces"
