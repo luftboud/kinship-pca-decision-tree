@@ -5,24 +5,21 @@ def compute_similarity_features(z1, z2):
     z1 = np.asarray(z1, dtype=float).ravel()
     z2 = np.asarray(z2, dtype=float).ravel()
     difference = np.abs(z1 - z2)
-    euclidian_distance = np.linalg.norm(z1 - z2)
-    manhattan_distance = np.sum(difference)
+    prod = z1 * z2
+    sq_diff = (z1 - z2) ** 2
 
-    denominator = np.linalg.norm(z1) * np.linalg.norm(z2)
-    cos_similarity = 0.0 if denominator == 0 else (z1 @ z2) / denominator
-    mean = np.mean(difference)
-    max_diff = np.max(difference)
-    std_diff = np.std(difference)
+    denom = np.linalg.norm(z1) * np.linalg.norm(z2)
+    cos_sim = 0.0 if denom == 0 else (z1 @ z2) / denom
 
-    dot_product = z1 @ z2
-    squared_euclidean = np.sum((z1 - z2) ** 2)
+    l1 = np.sum(difference)
+    l2 = np.linalg.norm(z1 - z2)
 
     return np.concatenate([
-        np.abs(z1 - z2),
-        z1 * z2,
-        [euclidian_distance, manhattan_distance, cos_similarity, mean,
-            max_diff, std_diff, dot_product, squared_euclidean]
-    ])
+        difference,
+        prod,
+        sq_diff,
+        np.array([cos_sim, l1, l2], dtype=float)
+    ]).astype(np.float32)
 
 
 def build_pair_feature_matrix(embeddings, pairs):
