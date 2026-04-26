@@ -40,6 +40,7 @@ def train_model(embeddings, train_pairs, train_labels):
 
     model.fit(x_train, y_train)
 
+
     train_pred = model.predict(x_train)
     print("Train accuracy:", accuracy_score(y_train, train_pred))
 

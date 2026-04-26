@@ -59,7 +59,8 @@ def build_positive_photo_pairs(positive_person_pairs, person_to_photo_indices, r
     return positive_photo_pairs
 
 
-def build_negative_photo_pairs(person_to_photo_indices, amount, rng, faces_root):
+def build_negative_photo_pairs(person_to_photo_indices, amount, rng, faces_root, embeddings,
+                               candidate_multiplier=20, hard_fraction=0.1):
     family_groups = {}
 
     for person_path, photo_indices in person_to_photo_indices.items():
@@ -68,21 +69,53 @@ def build_negative_photo_pairs(person_to_photo_indices, amount, rng, faces_root)
         family_groups.setdefault(family_id, []).append((person_path, photo_indices))
 
     family_ids = sorted(family_groups.keys())
-    negatives = set()
 
-    while len(negatives) < amount:
+    def sample_random_negative():
         f1, f2 = rng.choice(family_ids, size=2, replace=False)
 
-        person1, imgs1 = family_groups[f1][int(rng.integers(0, len(family_groups[f1])))]
-        person2, imgs2 = family_groups[f2][int(rng.integers(0, len(family_groups[f2])))]
+        _, imgs1 = family_groups[f1][int(rng.integers(0, len(family_groups[f1])))]
+        _, imgs2 = family_groups[f2][int(rng.integers(0, len(family_groups[f2])))]
 
         i = imgs1[int(rng.integers(0, len(imgs1)))]
         j = imgs2[int(rng.integers(0, len(imgs2)))]
 
-        pair = (i, j) if i < j else (j, i)
-        negatives.add(pair)
+        return (i, j) if i < j else (j, i)
+
+    num_hard = int(amount * hard_fraction)
+    num_random = amount - num_hard
+
+    negatives = set()
+    while len(negatives) < num_random:
+        negatives.add(sample_random_negative())
+
+    candidate_target = max(num_hard * candidate_multiplier, num_hard)
+    candidate_pairs = set()
+
+    while len(candidate_pairs) < candidate_target:
+        pair = sample_random_negative()
+        if pair not in negatives:
+            candidate_pairs.add(pair)
+
+    scored = []
+    for i, j in candidate_pairs:
+        sim = float(np.dot(embeddings[i], embeddings[j]))
+        scored.append((sim, (i, j)))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+
+    if len(scored) > 0 and num_hard > 0:
+        top_k = max(len(scored) // 3, num_hard)
+        pool = scored[:top_k]
+
+        chosen_idx = rng.choice(len(pool), size=min(num_hard, len(pool)), replace=False)
+        for k in chosen_idx:
+            negatives.add(pool[k][1])
+
+    while len(negatives) < amount:
+        negatives.add(sample_random_negative())
 
     return list(negatives)
+
 
 def get_prepared_train_data(relationships_file, faces_img_root):
     rng = np.random.default_rng(SEED)
@@ -132,7 +165,8 @@ def get_prepared_train_data(relationships_file, faces_img_root):
         person_to_photo_indices,
         amount=len(pos_idx_pairs),
         rng=rng,
-        faces_root=faces_img_root
+        faces_root=faces_img_root,
+        embeddings=embeddings
     )
 
     pairs = pos_idx_pairs + neg_idx_pairs

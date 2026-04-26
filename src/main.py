@@ -1,4 +1,4 @@
-from decision_tree_classifier import train_model, test_model
+from classifier import train_model, test_model
 from constants import *
 
 import train_preparation

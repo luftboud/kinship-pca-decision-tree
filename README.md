@@ -44,7 +44,7 @@ The dataset provides predefined relationships such as brother-brother, father-so
 │   ├── similarity.py                # similarity feature computation
 │   ├── train_preparation.py         # train data preparation
 │   ├── test_preparation.py          # test data preparation
-│   ├── decision_tree_classifier.py  # model training and evaluation
+│   ├── classifier.py  # model training and evaluation
 │   └── main.py                      # pipeline entry point
 ├── .gitignore
 ├── requirements.txt                 # dependencies
