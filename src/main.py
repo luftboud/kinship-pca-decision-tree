@@ -12,9 +12,9 @@ def main():
     test_pairs, test_labels, test_embeddings = test_preparation.get_prepared_test_data(wk, centering)
     accuracy, report, matrix = test_model(model, mean, std, test_embeddings, test_pairs, test_labels)
 
-    print(f"{model_label} accuracy: {accuracy:.4f}")
-    print(f"{model_label} report:\n{report}")
-    print(f"{model_label} confusion matrix:\n{matrix}")
+    print(f"Model accuracy: {accuracy:.4f}")
+    print(f"Model report:\n{report}")
+    print(f"Model confusion matrix:\n{matrix}")
 
 
 if __name__ == "__main__":
