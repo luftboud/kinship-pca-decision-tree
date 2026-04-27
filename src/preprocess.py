@@ -31,8 +31,6 @@ def preprocess_dir(directory, target_size=(100, 100)):
     for filename in os.listdir(directory):
         path = os.path.join(directory, filename)
         flat = preprocess_file(path, target_size)
-        if flat is None:
-            continue
         matrices.append(flat)
 
     matrices = np.array(matrices)
