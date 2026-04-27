@@ -55,7 +55,7 @@ def _split_by_family_disjointness(train_pairs, train_labels, family_ids, val_fra
     return np.asarray(train_idx), np.asarray(val_idx)
 
 
-def train_model(embeddings, train_pairs, train_labels, family_ids, model_type=MODEL_TYPE):
+def train_model(embeddings, train_pairs, train_labels, family_ids):
     x_all = build_pair_feature_matrix(embeddings, train_pairs)
     y_all = np.asarray(train_labels, dtype=int)
     mean, std = fit_standard_scaler(x_all)
@@ -64,7 +64,6 @@ def train_model(embeddings, train_pairs, train_labels, family_ids, model_type=MO
     train_idx, val_idx = _split_by_family_disjointness(train_pairs, train_labels, family_ids, val_fraction=0.2)
     x_train_scaled = x_all_scaled[train_idx]
     y_train = y_all[train_idx]
-    x_val_scaled = x_all_scaled[val_idx]
     y_val = y_all[val_idx]
 
     x_train_raw = x_all[train_idx]
@@ -74,43 +73,25 @@ def train_model(embeddings, train_pairs, train_labels, family_ids, model_type=MO
 
     rng = np.random.default_rng(SEED)
     perm = rng.permutation(len(y_train))
-    x_train_scaled = x_train_scaled[perm]
     x_train_raw = x_train_raw[perm]
     y_train = y_train[perm]
 
-    model_type = model_type.strip().lower()
-    if model_type == "random_forest":
-        print("Train: fitting Random Forest...")
-        model = RandomForestClassifier(
-            n_estimators=400,
-            max_depth=20,
-            min_samples_split=10,
-            min_samples_leaf=5,
-            max_features="sqrt",
-            class_weight="balanced_subsample",
-            bootstrap=True,
-            oob_score=True,
-            n_jobs=-1,
-            random_state=SEED
-        )
-        model.fit(x_train_raw, y_train)
-        train_pred = model.predict(x_train_raw)
-        val_pred = model.predict(x_val_raw)
-    else:
-        print("Train: fitting MLP...")
-        model = MLPClassifier(
-            hidden_layer_sizes=(256, 128, 64),
-            learning_rate_init=1e-3,
-            alpha=0.001,
-            early_stopping=True,
-            validation_fraction=0.15,
-            n_iter_no_change=20,
-            max_iter=500,
-            random_state=SEED
-        )
-        model.fit(x_train_scaled, y_train)
-        train_pred = model.predict(x_train_scaled)
-        val_pred = model.predict(x_val_scaled)
+    print("Train: fitting Random Forest...")
+    model = RandomForestClassifier(
+        n_estimators=400,
+        max_depth=20,
+        min_samples_split=10,
+        min_samples_leaf=5,
+        max_features="sqrt",
+        class_weight="balanced_subsample",
+        bootstrap=True,
+        oob_score=True,
+        n_jobs=-1,
+        random_state=SEED
+    )
+    model.fit(x_train_raw, y_train)
+    train_pred = model.predict(x_train_raw)
+    val_pred = model.predict(x_val_raw)
 
     print("Train accuracy:", accuracy_score(y_train, train_pred))
     print("Validation accuracy (family-disjoint):", accuracy_score(y_val, val_pred))
@@ -118,14 +99,11 @@ def train_model(embeddings, train_pairs, train_labels, family_ids, model_type=MO
     if hasattr(model, "oob_score_"):
         print("Random Forest OOB score:", model.oob_score_)
 
-    return model, mean, std, model_type
+    return model, mean, std
 
 
-def test_model(model, mean, std, embeddings, test_pairs, test_labels, model_type):
+def test_model(model, mean, std, embeddings, test_pairs, test_labels):
     x_test = build_pair_feature_matrix(embeddings, test_pairs)
-    model_type = model_type.strip().lower()
-    if model_type != "random_forest":
-        x_test = transform_standard_scaler(x_test, mean, std)
     y_test = np.array(test_labels, dtype=int)
 
     assert len(x_test) == len(y_test)
